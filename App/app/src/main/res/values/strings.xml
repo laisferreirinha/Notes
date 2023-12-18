@@ -1,12 +1,14 @@
 <resources>
     <string name="app_name">Notes</string>
 
+    <!-- Main Activity -->
+    <string name="new_item_menu">New note</string>
 
     <!-- Note Activity -->
     <string name ="note"></string>
     <string name ="title_hint">Write a title here</string>
     <string name ="note_hint">Write a note here</string>
-
+    <string name="save_item_menu">Save note</string>
 
 
 </resources>
