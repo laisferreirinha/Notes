@@ -7,7 +7,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:icon="@drawable/save"
-        android:iconTint="@color/white"
+        app:iconTint="@color/white"
         android:title="@string/save_item_menu"
         app:showAsAction="ifRoom" />
 
