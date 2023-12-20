@@ -1,22 +1,35 @@
 package pt.iade.laisferreira.atividade.models;
 
+import android.content.res.Resources;
+import android.util.Log;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.annotations.JsonAdapter;
+
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.net.URL;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Random;
+
+import pt.iade.laisferreira.atividade.utilities.DateJsonAdapter;
+import pt.iade.laisferreira.atividade.utilities.WebRequest;
 
 public class NoteItem implements Serializable {
     private int id;
     private String title;
     private String content;
-    private LocalDateTime creationDate;
-    private LocalDateTime modifiedDate;
+    @JsonAdapter(DateJsonAdapter.class)
+    private LocalDate creationDate;
+    @JsonAdapter(DateJsonAdapter.class)
+    private LocalDate modifiedDate;
 
     public NoteItem(){
-        this(0, "", "", LocalDateTime.now(), LocalDateTime.now());
+        this(0, "", "", LocalDate.now(), LocalDate.now());
     }
 
-    public NoteItem(int id, String title, String content, LocalDateTime creationDate, LocalDateTime modifiedDate){
+    public NoteItem(int id, String title, String content, LocalDate creationDate, LocalDate modifiedDate){
         this.id = id;
         this.title = title;
         this.content = content;
@@ -24,42 +37,108 @@ public class NoteItem implements Serializable {
         this.modifiedDate = modifiedDate;
     }
 
-    public static ArrayList<NoteItem> List(){
-        //  TODO: Fetch the WebServer to the note list
-
-        //  Simulates the WebServer Fetch
+    public static void List(ListResponse response){
+        //  Fetch the WebServer to the note list
         ArrayList<NoteItem> notes = new ArrayList<NoteItem>();
-        notes.add(new NoteItem(1, "Math home-work", "Delivery date: 19-12-2023",
-                LocalDateTime.now(), LocalDateTime.now()));
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    WebRequest request = new WebRequest(new URL(WebRequest.LOCALHOST+"/api/notes"));
+                    String resp = request.performGetRequest();
 
-        notes.add(new NoteItem(2, "Download the Joaquim's song.", "Released at 4 A.M",
-                LocalDateTime.now(), LocalDateTime.now()));
+                    JsonArray array = new Gson().fromJson(resp, JsonArray.class);
 
-        notes.add(new NoteItem(3, "Android note applicaion to deliver", "Delivery date: 20-12-2023",
-                LocalDateTime.now(), LocalDateTime.now()));
+                    for (JsonElement e : array){
+                        notes.add(new Gson().fromJson(e, NoteItem.class));
+                    }
 
-        notes.add(new NoteItem(4, "Some new note", "Yep.",
-                LocalDateTime.now(), LocalDateTime.now()));
+                    response.response(notes);
 
-        return notes;
+                }catch (Exception e){
+                    Log.e("NoteItem.List", e.toString());
+                }
+            }
+        });
+        thread.start();
     }
 
-    public static NoteItem GetById(int id){
-        return new NoteItem();
+    /**
+     * Gets the object from the web server by its ID in the database.
+     *
+     * @param id ID of the item in the database.
+     * @param response Object with data from our web server.
+     */
+
+
+    public static void GetById(int id, GetByIdResponse response){
+        // Fetch the item from the web server using its id and populate the object.
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                        WebRequest request = new WebRequest(new URL(WebRequest.LOCALHOST + "/api/notes/" + id));
+                        String resp = request.performGetRequest();
+
+                        NoteItem item = new Gson().fromJson(resp, NoteItem.class);
+
+                        response.response(item);
+
+                }   catch (Exception e) {
+                    Log.e("TodoItem", e.toString());
+                }
+            }
+        });
+        thread.start();
+
     }
 
 
-    public void save(){
-        if(id == 0){
-            //  TODO: implement the INSERT of a new item to the WebServer
-            id = new Random().nextInt(1000)+1;
-        }else{
-            //  TODO: implement the UPDATE of an existing item to the WebServer
-        }
+    public void save(DefaultResponse response){
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    if(id == 0){
+                        //  The INSERT of a new item to the WebServer
+                        WebRequest request = new WebRequest(new URL(WebRequest.LOCALHOST + "/api/notes"));
+                        String resp = request.performPostRequest(NoteItem.this);
+
+                        NoteItem respItem = new Gson().fromJson(resp, NoteItem.class);
+                        id = respItem.getId();
+                        response.response();
+                    }else{
+                        //  The UPDATE of an existing item to the WebServer
+                        WebRequest request = new WebRequest(new URL(WebRequest.LOCALHOST + "/api/notes/" + id));
+                        request.performPostRequest(NoteItem.this);
+                        response.response();
+                    }
+
+                }   catch (Exception e) {
+                    Log.e("TodoItem.save", e.toString());
+                }
+            }
+        });
+        thread.start();
+
     }
 
-    public void delete() {
-        //  TODO: implete the DELETE method
+    public void delete(DefaultResponse response) {
+        //  The DELETE method
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    WebRequest request = new WebRequest(new URL(WebRequest.LOCALHOST+"/api/notes/"+id));
+                    request.performDeleteRequest();
+                    response.response();
+
+                } catch (Exception e){
+                    Log.e("NoteItem.delete", e.toString());
+                }
+            }
+        });
+        thread.start();
     }
 
     public int getId() {
@@ -82,19 +161,19 @@ public class NoteItem implements Serializable {
         this.content = content;
     }
 
-    public LocalDateTime getCreationDate() {
+    public LocalDate getCreationDate() {
         return creationDate;
     }
 
-    public void setCreationDate(LocalDateTime creationDate) {
+    public void setCreationDate(LocalDate creationDate) {
         this.creationDate = NoteItem.this.creationDate;
     }
 
-    public LocalDateTime getModifiedDate() {
+    public LocalDate getModifiedDate() {
         return modifiedDate;
     }
 
-    public void setModifiedDate(LocalDateTime modifiedDate) {
+    public void setModifiedDate(LocalDate modifiedDate) {
         this.modifiedDate = modifiedDate;
     }
 
@@ -102,4 +181,14 @@ public class NoteItem implements Serializable {
     public String toString(){
         return "Title: " + title;
     }
+    public interface ListResponse {
+        public void response(ArrayList<NoteItem> items);
+    }
+    public interface GetByIdResponse {
+        public void response(NoteItem item);
+    }
+    public interface DefaultResponse{
+        public void response();
+    }
+
 }

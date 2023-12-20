@@ -10,6 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import pt.iade.laisferreira.atividade.models.NoteItem;
@@ -44,15 +45,31 @@ public class NoteActivity extends AppCompatActivity {
         if(item.getItemId() == R.id.action_save_item) {
             //Actionbar "Save" button.
             commitView();
-            this.item.save();
+            this.item.save(new NoteItem.DefaultResponse() {
+                @Override
+                public void response() {
+                    Intent returnIntent = new Intent();
+                    returnIntent.putExtra("position", position);
+                    returnIntent.putExtra("updatedItem", NoteActivity.this.item);
+                    setResult(AppCompatActivity.RESULT_OK, returnIntent);
 
-            Intent returnIntent = new Intent();
-            returnIntent.putExtra("position", position);
-            returnIntent.putExtra("updatedItem", this.item);
-            setResult(AppCompatActivity.RESULT_OK, returnIntent);
-
-            finish();
+                    finish();
+                }
+            });
             return true;
+        } else if(item.getItemId() == R.id.action_delete_item){
+            this.item.delete(new NoteItem.DefaultResponse() {
+                @Override
+                public void response() {
+                    Intent returnIntent = new Intent();
+                    returnIntent.putExtra("delete", true);
+                    returnIntent.putExtra("position", position);
+                    returnIntent.putExtra("updatedItem", NoteActivity.this.item);
+                    setResult(AppCompatActivity.RESULT_OK, returnIntent);
+
+                    finish();
+                }
+            });
         }
         return super.onOptionsItemSelected(item);
     }
@@ -74,8 +91,8 @@ public class NoteActivity extends AppCompatActivity {
     private void commitView() {
         item.setTitle(title.getText().toString());
         item.setContent(content.getText().toString());
-        item.setCreationDate(LocalDateTime.now());
-        item.setModifiedDate(LocalDateTime.now());
+        item.setCreationDate(LocalDate.now());
+        item.setModifiedDate(LocalDate.now());
     }
 
 }

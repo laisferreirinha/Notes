@@ -1,5 +1,6 @@
 package pt.iade.laisferreira.notes.webserver.models;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class NoteItem {
@@ -7,15 +8,15 @@ public class NoteItem {
     private int id;
     private String title;
     private String content;
-    private LocalDateTime creationDate;
-    private LocalDateTime modifiedDate;
+    private LocalDate creationDate;
+    private LocalDate modifiedDate;
 
     public NoteItem(){
 
     }
 
     public NoteItem(String title, String content,
-                    LocalDateTime creationDate, LocalDateTime modifiedDate){
+                    LocalDate creationDate, LocalDate modifiedDate){
         this.title = title;
         this.content = content;
         this.creationDate = creationDate;
@@ -45,19 +46,19 @@ public class NoteItem {
         this.content = content;
     }
 
-    public LocalDateTime getCreationDate() {
+    public LocalDate getCreationDate() {
         return creationDate;
     }
 
-    public void setCreationDate(LocalDateTime creationDate) {
+    public void setCreationDate(LocalDate creationDate) {
         this.creationDate = creationDate;
     }
 
-    public LocalDateTime getModifiedDate() {
+    public LocalDate getModifiedDate() {
         return modifiedDate;
     }
 
-    public void setModifiedDate(LocalDateTime modifiedDate) {
+    public void setModifiedDate(LocalDate modifiedDate) {
         this.modifiedDate = modifiedDate;
     }
 }

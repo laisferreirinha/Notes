@@ -30,8 +30,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        itemsList = NoteItem.List();
-
         setupComponents();
     }
 
@@ -61,20 +59,33 @@ public class MainActivity extends AppCompatActivity {
 
         if(requestCode == NOTE_ACTIVITY_REQUEST_ID){
             if(resultCode == AppCompatActivity.RESULT_OK){
+
+                boolean toDelete = data.getBooleanExtra("delete", false);
                 int position = data.getIntExtra("position", -1);
                 NoteItem updatedItem = (NoteItem) data.getSerializableExtra("updatedItem");
 
-                if(position == -1){
-                    itemsList.add(updatedItem);
-                    itemRowAdapter.notifyItemInserted(itemsList.size()-1);
-                }
-                else{
-                    itemsList.set(position, updatedItem);
-                    itemRowAdapter.notifyItemChanged(position);
+                if (!toDelete){
+                    if(position == -1){
+                        itemsList.add(updatedItem);
+                        itemRowAdapter.notifyItemInserted(itemsList.size()-1);
+                    }
+                    else{
+                        itemsList.set(position, updatedItem);
+                        itemRowAdapter.notifyItemChanged(position);
 
+                    }
+                } else{
+                    if(position != -1){
+                        Log.e("delete_action", "Yep");
+                        itemsList.remove(position);
+                        itemRowAdapter.notifyItemRemoved(position);
+                    }
                 }
+
             }
+
         }
+
     }
 
 
@@ -82,22 +93,31 @@ public class MainActivity extends AppCompatActivity {
         //Setup the Actionbar.
         setSupportActionBar(findViewById(R.id.toolbar));
 
-        itemRowAdapter = new NoteItemRowAdapter(this, itemsList);
-        itemRowAdapter.setOnClickListener(new NoteItemRowAdapter.ItemClickListener() {
+        NoteItem.List(new NoteItem.ListResponse() {
             @Override
-            public void onItemClick(View view, int position) {
-                Intent intent = new Intent(MainActivity.this, NoteActivity.class);
-                intent.putExtra("position", position);
-                intent.putExtra("item", itemsList.get(position));
+            public void response(ArrayList<NoteItem> items) {
+                itemsList=items;
 
-                startActivityForResult(intent, NOTE_ACTIVITY_REQUEST_ID);
+                itemRowAdapter = new NoteItemRowAdapter(MainActivity.this, itemsList);
+                itemRowAdapter.setOnClickListener(new NoteItemRowAdapter.ItemClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
+                        Intent intent = new Intent(MainActivity.this, NoteActivity.class);
+                        intent.putExtra("position", position);
+                        intent.putExtra("item", itemsList.get(position));
+
+                        startActivityForResult(intent, NOTE_ACTIVITY_REQUEST_ID);
+                    }
+                });
+
+                //  Setup the items Recycler View
+                itemsListView = (RecyclerView) findViewById(R.id.notes_list);
+                itemsListView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+                itemsListView.setAdapter(itemRowAdapter);
             }
         });
 
-        //  Setup the items Recycler View
-        itemsListView = (RecyclerView) findViewById(R.id.notes_list);
-        itemsListView.setLayoutManager(new LinearLayoutManager(this));
-        itemsListView.setAdapter(itemRowAdapter);
+
     }
 
 
